@@ -1,0 +1,79 @@
+# ----------------------------------------------------------------------------------------
+# Baseado em https://github.com/cluster-apps-on-docker/spark-standalone-cluster-on-docker --
+# ----------------------------------------------------------------------------------------
+# Acrescentado o traefik para organizamos as URLs
+version: "3.6"
+services:
+  traefik:
+    image: "traefik:v2.5"
+    container_name: "traefik"
+    command:
+      #- "--log.level=DEBUG"
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+
+  jupyterlab:
+    #image: andreper/jupyterlab:3.0.0-spark-3.0.0
+    image: jupyterlab
+    build: ./build/jupyterlab
+    container_name: jupyterlab
+    volumes:
+      - ./workspace:/opt/workspace
+    command: jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --allow-root --NotebookApp.token=provaP2
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.jupyterlab.rule=Host(`localhost`)"
+      - "traefik.http.services.jupyterlab.loadbalancer.server.port=8888"
+      - "traefik.http.routers.jupyterlab.entrypoints=web"
+
+
+  spark-master:
+    image: andreper/spark-master:3.0.0
+    container_name: spark-master
+    volumes:
+      - ./workspace:/opt/workspace
+    labels:
+      - "traefik.enable=true"
+      #- "traefik.http.routers.spark-master.rule=PathPrefix(`/spark-master`) || (HeadersRegexp(`Referer`, `http://localhost/spark-master`) && (PathPrefix(`/static`) || PathPrefix(`/app`) ))"
+      - "traefik.http.routers.spark-master.rule=PathPrefix(`/spark-master`) || ((HeadersRegexp(`Referer`, `http://localhost/spark-master`) || HeadersRegexp(`Referer`, `http://localhost/app`)) && (PathPrefix(`/static`) || PathPrefix(`/app`) ))"
+      - "traefik.http.services.spark-master.loadbalancer.server.port=8080"
+      - "traefik.http.routers.spark-master.entrypoints=web"
+
+  spark-worker-1:
+    image: andreper/spark-worker:3.0.0
+    container_name: spark-worker-1
+    environment:
+      - SPARK_WORKER_CORES=4
+      - SPARK_WORKER_MEMORY=2048m
+    volumes:
+      - ./workspace:/opt/workspace
+    depends_on:
+      - spark-master
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.spark-worker-1.rule=PathPrefix(`/spark-worker-1`) || (HeadersRegexp(`Referer`, `http://localhost/spark-worker-1`) && PathPrefix(`/static`))"
+      - "traefik.http.services.spark-worker-1.loadbalancer.server.port=8081"
+      - "traefik.http.routers.spark-worker-1.entrypoints=web"
+
+  spark-worker-2:
+    image: andreper/spark-worker:3.0.0
+    container_name: spark-worker-2
+    environment:
+      - SPARK_WORKER_CORES=4
+      - SPARK_WORKER_MEMORY=2048m
+    volumes:
+      - ./workspace:/opt/workspace
+    depends_on:
+      - spark-master
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.spark-worker-2.rule=PathPrefix(`/spark-worker-2`) || (HeadersRegexp(`Referer`, `http://localhost/spark-worker-2`) && PathPrefix(`/static`))"
+      - "traefik.http.services.spark-worker-2.loadbalancer.server.port=8081"
+      - "traefik.http.routers.spark-worker-2.entrypoints=web"
