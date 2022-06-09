@@ -26,7 +26,7 @@ services:
     container_name: jupyterlab
     volumes:
       - ./workspace:/opt/workspace
-    command: jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --allow-root --NotebookApp.token=provaP2
+    command: jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --allow-root --NotebookApp.token=NovaSenha123
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.jupyterlab.rule=Host(10.10.122.29)"
