@@ -41,8 +41,8 @@ services:
       - ./workspace:/opt/workspace
     labels:
       - "traefik.enable=true"
-      #- "traefik.http.routers.spark-master.rule=PathPrefix(`/spark-master`) || (HeadersRegexp(`Referer`, `http://localhost/spark-master`) && (PathPrefix(`/static`) || PathPrefix(`/app`) ))"
-      - "traefik.http.routers.spark-master.rule=PathPrefix(`/spark-master`) || ((HeadersRegexp(`Referer`, `http://localhost/spark-master`) || HeadersRegexp(`Referer`, `http://localhost/app`)) && (PathPrefix(`/static`) || PathPrefix(`/app`) ))"
+      #- "traefik.http.routers.spark-master.rule=PathPrefix(`/spark-master`) || (HeadersRegexp(`Referer`, `http://10.10.122.29/spark-master`) && (PathPrefix(`/static`) || PathPrefix(`/app`) ))"
+      - "traefik.http.routers.spark-master.rule=PathPrefix(`/spark-master`) || ((HeadersRegexp(`Referer`, `http://10.10.122.29/spark-master`) || HeadersRegexp(`Referer`, `http://10.10.122.29/app`)) && (PathPrefix(`/static`) || PathPrefix(`/app`) ))"
       - "traefik.http.services.spark-master.loadbalancer.server.port=8080"
       - "traefik.http.routers.spark-master.entrypoints=web"
 
@@ -58,7 +58,7 @@ services:
       - spark-master
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.spark-worker-1.rule=PathPrefix(`/spark-worker-1`) || (HeadersRegexp(`Referer`, `http://localhost/spark-worker-1`) && PathPrefix(`/static`))"
+      - "traefik.http.routers.spark-worker-1.rule=PathPrefix(`/spark-worker-1`) || (HeadersRegexp(`Referer`, `http://10.10.122.29/spark-worker-1`) && PathPrefix(`/static`))"
       - "traefik.http.services.spark-worker-1.loadbalancer.server.port=8081"
       - "traefik.http.routers.spark-worker-1.entrypoints=web"
 
@@ -74,6 +74,6 @@ services:
       - spark-master
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.spark-worker-2.rule=PathPrefix(`/spark-worker-2`) || (HeadersRegexp(`Referer`, `http://localhost/spark-worker-2`) && PathPrefix(`/static`))"
+      - "traefik.http.routers.spark-worker-2.rule=PathPrefix(`/spark-worker-2`) || (HeadersRegexp(`Referer`, `http://10.10.122.29/spark-worker-2`) && PathPrefix(`/static`))"
       - "traefik.http.services.spark-worker-2.loadbalancer.server.port=8081"
       - "traefik.http.routers.spark-worker-2.entrypoints=web"
